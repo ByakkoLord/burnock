@@ -9,6 +9,7 @@ import * as SplashScreen from "expo-splash-screen";
 import axios, { AxiosResponse } from "axios";
 import { ScrollView } from "react-native";
 import Itens from "./components/Itens";
+import Forms from "./components/forms";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,8 +25,11 @@ export default function Index() {
   const [modalVisible, setModalVisible] = useState(false);
   const [scanned, setScanned] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
+  const [formsVisible, setFormsVisible] = useState(false);
 
   useEffect(() => {
+    setFormsVisible(true);
+
     axios
       .get("https://burnock-server.onrender.com/reps")
       .then((response: AxiosResponse) => {
@@ -47,6 +51,9 @@ export default function Index() {
     if (!scanned) {
       setScanned(true);
       console.log("QR Code escaneado:", result.data);
+      setModalVisible(false);
+
+      {/*
       axios
         .post("https://burnock-server.onrender.com/sendrep", {
           numero_serie: result.data,
@@ -62,9 +69,9 @@ export default function Index() {
         })
         .then(() => {
           console.log("Dados enviados com sucesso:", result.data);
-        });
+        });*/}
 
-      setModalVisible(false);
+      
       // Aqui você pode usar o `result.data` para buscar mais informações ou fazer algo com o QR Code.
     }
   };
@@ -79,6 +86,7 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
+      <Forms formVisible={formsVisible} />
       <ScrollView
         style={{ flex: 1, width: "100%", marginTop: 50 }}
         contentContainerStyle={{
