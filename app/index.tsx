@@ -20,7 +20,7 @@ export default function Index() {
 
   useEffect(() => {
     axios
-      .get("http://192.168.0.239:3000/reps")
+      .get("https://burnock-server.onrender.com/reps")
       .then((response: AxiosResponse) => {
         console.log(response.data);
         setRepArray(response.data);
@@ -65,7 +65,7 @@ export default function Index() {
     </View>
       <TouchableOpacity
         onPressIn={() => {
-          axios.post("http://192.168.0.239:3000/sendrep", {
+          axios.post("https://burnock-server.onrender.com/sendrep", {
             numero_serie: "123456",
             data_entrada: new Date().toISOString(), // data no formato ISO
             data_saida: null, // ou "" se preferir
