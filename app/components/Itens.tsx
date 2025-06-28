@@ -1,17 +1,28 @@
 import { View, Image, Text } from "react-native";
-import { useFonts, Poppins_400Regular, Poppins_700Bold, Poppins_500Medium } from '@expo-google-fonts/poppins';
+import {
+  useFonts,
+  Poppins_400Regular,
+  Poppins_700Bold,
+  Poppins_500Medium,
+} from "@expo-google-fonts/poppins";
+
 interface ItensProps {
   numero_series: string;
   modelo: string;
   cliente: string;
   status: string;
 }
+
 export default function Itens({ numero_series, modelo, cliente, status }: ItensProps) {
-     const [fontsLoaded] = useFonts({
+  const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_700Bold,
     Poppins_500Medium,
   });
+
+  if (!fontsLoaded) {
+    return null; // ou um <Text>Carregando fontes...</Text>
+  }
 
   return (
     <View
@@ -24,15 +35,37 @@ export default function Itens({ numero_series, modelo, cliente, status }: ItensP
         borderRadius: 14,
       }}
     >
-      <View style={{ width: "100%" ,flexDirection: "row", justifyContent: "flex-start", gap: 12, marginLeft: 32, alignItems: "center" }}>
+      <View
+        style={{
+          width: "100%",
+          flexDirection: "row",
+          justifyContent: "flex-start",
+          gap: 12,
+          marginLeft: 32,
+          alignItems: "center",
+        }}
+      >
         <Image
-          style={{ width: 90, height: 91, borderRadius: 25, backgroundColor: "#ACACAC" }}
+          style={{
+            width: 90,
+            height: 91,
+            borderRadius: 25,
+            backgroundColor: "#ACACAC",
+          }}
         />
         <View>
-          <Text style={{ color: "#5E5E5E" ,fontFamily: 'Poppins_500Medium' }}>SN: {numero_series}</Text>
-          <Text style={{ color: "#5E5E5E" ,fontFamily: 'Poppins_500Medium' }}>Modelo: {modelo}</Text>
-          <Text style={{ color: "#5E5E5E" ,fontFamily: 'Poppins_500Medium' }}>Cliente: {cliente}</Text>
-          <Text style={{ color: "#CD8686", fontFamily: 'Poppins_500Medium' }}>{status}</Text>
+          <Text style={{ color: "#5E5E5E", fontFamily: "Poppins_500Medium" }}>
+            SN: {numero_series}
+          </Text>
+          <Text style={{ color: "#5E5E5E", fontFamily: "Poppins_400Regular" }}>
+            Modelo: {modelo}
+          </Text>
+          <Text style={{ color: "#5E5E5E", fontFamily: "Poppins_400Regular" }}>
+            Cliente: {cliente}
+          </Text>
+          <Text style={{ color: "#CD8686", fontFamily: "Poppins_700Bold" }}>
+            {status}
+          </Text>
         </View>
       </View>
     </View>
