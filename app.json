@@ -24,9 +24,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.burnock.burnock",
-      "permissions": [
-        "android.permission.CAMERA"
-      ]
+      "permissions": ["android.permission.CAMERA"]
     },
     "web": {
       "bundler": "metro",
@@ -44,7 +42,6 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-barcode-scanner",
       "expo-font"
     ],
     "experiments": {
