@@ -1,9 +1,9 @@
-import { Text, View, Modal, TouchableOpacity } from "react-native";
-import React, { useEffect } from "react";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import React, { useEffect, useState } from "react";
+import { Text, View, Modal, TouchableOpacity, StyleSheet } from "react-native";
+import { CameraView, useCameraPermissions, BarcodeScanningResult } from "expo-camera";
 import * as SplashScreen from "expo-splash-screen";
 import axios, { AxiosResponse } from "axios";
-
+import { ScrollView } from "react-native";
 import Itens from "./components/Itens";
 
 SplashScreen.preventAutoHideAsync();
@@ -16,18 +16,21 @@ type Rep = {
 };
 
 export default function Index() {
-  const [repArray, setRepArray] = React.useState<Rep[]>([]);
+  const [repArray, setRepArray] = useState<Rep[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [scanned, setScanned] = useState(false);
+  const [permission, requestPermission] = useCameraPermissions();
 
   useEffect(() => {
     axios
       .get("https://burnock-server.onrender.com/reps")
       .then((response: AxiosResponse) => {
-        console.log(response.data);
         setRepArray(response.data);
       })
       .catch((error: Error) => {
         console.error("Erro ao buscar dados:", error);
       });
+
     const prepareApp = async () => {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       await SplashScreen.hideAsync();
@@ -35,6 +38,15 @@ export default function Index() {
 
     prepareApp();
   }, []);
+
+  const handleBarCodeScanned = (result: BarcodeScanningResult) => {
+    if (!scanned) {
+      setScanned(true);
+      console.log("QR Code escaneado:", result.data);
+      setModalVisible(false);
+      // Aqui você pode usar o `result.data` para buscar mais informações ou fazer algo com o QR Code.
+    }
+  };
 
   const reps = repArray.map((rep, index) => ({
     id: index + 1,
@@ -45,53 +57,106 @@ export default function Index() {
   }));
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 15,
-      }}
-    ><View style={{overflowY: "auto", maxHeight: "70%", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 15}}>
-      {reps.map((rep) => (
-        <Itens
-          key={rep.id}
-          numero_series={rep.numero_serie}
-          modelo={rep.modelo}
-          cliente={rep.cliente}
-          status={rep.status}
-        />
-      ))}
-    </View>
-      <TouchableOpacity
-        onPressIn={() => {
-          axios.post("https://burnock-server.onrender.com/sendrep", {
-            numero_serie: "123456",
-            data_entrada: new Date().toISOString(), // data no formato ISO
-            data_saida: null, // ou "" se preferir
-            relatorio: "",
-            modelo: "Modelo X",
-            cliente: "Cliente Y",
-            status: "Ativo",
-          });
-        }}
-        style={{
-          position: "fixed",
-          right: 45,
-          bottom: 30,
-          width: 70,
-          height: 70,
-          backgroundColor: "#B8B8B8",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: "50%",
-        }}
-        onPress={() => {}}
-      ></TouchableOpacity>
+    <View style={styles.container}>
+      <ScrollView
+  style={{ flex: 1, width: "100%" }}
+  contentContainerStyle={{
+    alignItems: "center",
+    gap: 15,
+    paddingBottom: 100,
+  }}
+>
+  {reps.map((rep) => (
+    <Itens
+      key={rep.id}
+      numero_series={rep.numero_serie}
+      modelo={rep.modelo}
+      cliente={rep.cliente}
+      status={rep.status}
+    />
+  ))}
+</ScrollView>
 
-      {/*<Modal visible={true} animationType="slide">
-        <CameraView style={{ flex: 1, width: 300, height: 200, position: "absolute", top: 500, left: 50 }} onBarcodeScanned={( qrCode ) => {console.log(qrCode.data)}}/>
-      </Modal>*/}
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => {
+          setScanned(false);
+          setModalVisible(true);
+          requestPermission();
+        }}
+      >
+        <Text style={{ fontSize: 30 }}>📷</Text>
+      </TouchableOpacity>
+
+      <Modal visible={modalVisible} animationType="slide">
+        {permission?.granted ? (
+          <CameraView
+            style={{ flex: 1 }}
+            barcodeScannerSettings={{
+              barcodeTypes: ["qr", "pdf417", "code128"],
+            }}
+            onBarcodeScanned={handleBarCodeScanned}
+          />
+        ) : (
+          <View style={styles.permissionDenied}>
+            <Text>Permissão da câmera negada. Vá nas configurações e ative.</Text>
+          </View>
+        )}
+        <TouchableOpacity
+          onPress={() => setModalVisible(false)}
+          style={styles.closeButton}
+        >
+          <Text style={{ color: "#fff", fontSize: 16 }}>Fechar</Text>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 30,
+    alignItems: "center",
+    gap: 15,
+  },
+  scrollArea: {
+    flexGrow: 0,
+    maxHeight: "70%",
+    width: "100%",
+    alignItems: "center",
+    gap: 15,
+  },
+  scrollContent: {
+  alignItems: "center",
+  paddingBottom: 100, // pra não colar no botão flutuante
+  gap: 15,
+},
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 30,
+    width: 70,
+    height: 70,
+    backgroundColor: "#B8B8B8",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 35,
+    elevation: 5,
+  },
+  closeButton: {
+    position: "absolute",
+    bottom: 40,
+    alignSelf: "center",
+    padding: 10,
+    backgroundColor: "#000",
+    borderRadius: 8,
+  },
+  permissionDenied: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+});
