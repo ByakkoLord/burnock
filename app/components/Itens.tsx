@@ -1,6 +1,5 @@
 import { View, Image, Text } from "react-native";
 import { useFonts, Poppins_400Regular, Poppins_700Bold, Poppins_500Medium } from '@expo-google-fonts/poppins';
-import AppLoading from 'expo-app-loading'; 
 interface ItensProps {
   numero_series: string;
   modelo: string;
@@ -13,9 +12,6 @@ export default function Itens({ numero_series, modelo, cliente, status }: ItensP
     Poppins_700Bold,
     Poppins_500Medium,
   });
-    if (!fontsLoaded) {
-        return <AppLoading />;
-    }
 
   return (
     <View
