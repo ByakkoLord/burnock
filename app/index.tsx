@@ -1,5 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { Text, View, Modal, TouchableOpacity, StyleSheet, Image } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Text,
+  View,
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Animated,
+} from "react-native";
 import {
   CameraView,
   useCameraPermissions,
@@ -26,9 +34,22 @@ export default function Index() {
   const [scanned, setScanned] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const [formsVisible, setFormsVisible] = useState(false);
+  const [backButtonVisible, setBackButtonVisible] = useState(true);
+  const [qrResult, setQrResult] = useState<string>("");
+    const position = useRef(new Animated.ValueXY({ x: 0, y: 500 })).current;
 
   useEffect(() => {
-    setFormsVisible(true);
+    if (formsVisible) {
+      setBackButtonVisible(true);
+    } else {
+      setBackButtonVisible(false);
+    }
+
+    Animated.timing(position, {
+      toValue: { x: 0, y: 0 },
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
 
     axios
       .get("https://burnock-server.onrender.com/reps")
@@ -52,26 +73,8 @@ export default function Index() {
       setScanned(true);
       console.log("QR Code escaneado:", result.data);
       setModalVisible(false);
-
-      {/*
-      axios
-        .post("https://burnock-server.onrender.com/sendrep", {
-          numero_serie: result.data,
-          data_entrada: new Date().toISOString(),
-          data_saida: null, // Aqui você pode substituir por um valor real
-          relatorio: "https://example.com/relatorio", // Aqui você pode substituir por um valor real
-          modelo: "Modelo Exemplo", // Aqui você pode substituir por um valor real
-          cliente: "Cliente Exemplo", // Aqui você pode substituir por um valor real
-          status: "Ativo", // Aqui você pode substituir por um valor real
-        })
-        .catch((error: Error) => {
-          console.error("Erro ao enviar dados:", error);
-        })
-        .then(() => {
-          console.log("Dados enviados com sucesso:", result.data);
-        });*/}
-
-      
+      setFormsVisible(true);
+      setQrResult(result.data);
       // Aqui você pode usar o `result.data` para buscar mais informações ou fazer algo com o QR Code.
     }
   };
@@ -86,7 +89,27 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      <Forms formVisible={formsVisible} />
+      {formsVisible && (
+        <TouchableOpacity
+          onPress={() => {
+            setFormsVisible(false);
+          }}
+          style={{
+            position: "absolute",
+            bottom: 35,
+            left: 50,
+            zIndex: 999,
+            width: 50,
+            height: 50,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "black",
+            borderRadius: "50%",
+          }}
+        ></TouchableOpacity>
+      )}
+
+      <Forms formVisible={formsVisible} result={qrResult} />
       <ScrollView
         style={{ flex: 1, width: "100%", marginTop: 50 }}
         contentContainerStyle={{
@@ -106,31 +129,45 @@ export default function Index() {
         ))}
       </ScrollView>
 
+      <TouchableOpacity style={[styles.fab, {}]}></TouchableOpacity>
+      <TouchableOpacity style={[styles.fab, {}]}></TouchableOpacity>
+      <TouchableOpacity style={[styles.fab, {transform: position.getTranslateTransform()}]}></TouchableOpacity>
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, {}]}
         onPress={() => {
           setScanned(false);
           setModalVisible(true);
           requestPermission();
         }}
       >
-        <Text style={{ fontSize: 30 }}>📷</Text>
+        <Image
+          source={require("../assets/images/qrcode.png")}
+          style={{ width: 40, height: 40 }}
+        />
       </TouchableOpacity>
 
-      <Modal visible={modalVisible} animationType="slide">
+      <Modal visible={modalVisible} animationType="fade">
         {permission?.granted ? (
           <>
-          <Image
-            style={{ zIndex: 999, width: 300, height: 300, position: "absolute", top: 250, left: "50%", transform: [{ translateX: -150 }] }}
-            source={require("../assets/images/qr-scan.png")}
-          />
-          <CameraView
-            style={{ flex: 1 }}
-            barcodeScannerSettings={{
-              barcodeTypes: ["qr", "pdf417", "code128"],
-            }}
-            onBarcodeScanned={handleBarCodeScanned}
-          />
+            <Image
+              style={{
+                zIndex: 999,
+                width: 300,
+                height: 300,
+                position: "absolute",
+                top: 250,
+                left: "50%",
+                transform: [{ translateX: -150 }],
+              }}
+              source={require("../assets/images/qr-scan.png")}
+            />
+            <CameraView
+              style={{ flex: 1 }}
+              barcodeScannerSettings={{
+                barcodeTypes: ["qr", "pdf417", "code128"],
+              }}
+              onBarcodeScanned={handleBarCodeScanned}
+            />
           </>
         ) : (
           <View style={styles.permissionDenied}>
@@ -179,7 +216,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 35,
-    elevation: 5,
   },
   closeButton: {
     position: "absolute",
