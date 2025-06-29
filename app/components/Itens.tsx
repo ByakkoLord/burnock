@@ -41,13 +41,6 @@ export default function Itens({
     Poppins_500Medium,
   });
 
-  useEffect(() => {
-    if (data_entrada) {
-      console.log("Data de entrada:", data_entrada);
-      console.log("Status atualizado para:", status);
-    }
-  }, []);
-
   if (!fontsLoaded) {
     return null;
   }
@@ -58,7 +51,7 @@ export default function Itens({
         alignItems: "center",
         width: "80%",
         height: 119,
-        backgroundColor: "white",
+        backgroundColor: "#F0F0F0",
         borderRadius: 14,
       }}
     >

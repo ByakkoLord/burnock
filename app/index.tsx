@@ -161,10 +161,19 @@ export default function Index() {
               "Número de série já existe:",
               response.data.numero_serie
             );
+            const updateResponse = await axios.post(
+              "https://burnock-server.onrender.com/reps/update-status",
+              {
+                numero_serie: result.data,
+                status: "Retirado",
+              }
+            );
             return;
+          } else {
+            setFormsVisible(true);
           }
-        } finally {
-          setFormsVisible(true);
+        } catch (error) {
+          console.error("Erro ao atualizar status:", error);
         }
       })();
     }
@@ -262,7 +271,7 @@ export default function Index() {
         ></TouchableOpacity>
       )}
 
-      <Forms formVisible={formsVisible} result={qrResult} />
+      <Forms formVisible={formsVisible} result={qrResult} rep={reps} />
 
       <ScrollView
         style={{ flex: 1, width: "100%", marginTop: 10 }}
@@ -394,7 +403,6 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: "absolute",
-    borderWidth: 1,
     right: 20,
     bottom: 30,
     width: 70,

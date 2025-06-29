@@ -18,9 +18,10 @@ import {
 interface FormsProps {
   formVisible: boolean;
   result: string;
+  rep: any;
 }
 
-export default function Forms({ formVisible, result }: FormsProps) {
+export default function Forms({ formVisible, result, rep }: FormsProps) {
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_700Bold,
@@ -30,23 +31,30 @@ export default function Forms({ formVisible, result }: FormsProps) {
   const [cliente, setCliente] = React.useState("");
   const [relatorio, setRelatorio] = React.useState("");
   const [modelo, setModelo] = React.useState("");
-  const [status, setStatus] = React.useState("Retirado");
-  const handleSendRep = async () => {
-    try {
-      await axios.post("https://burnock-server.onrender.com/sendrep", {
-        numero_serie: result,
-        data_entrada: new Date().toISOString(),
-        data_saida: null,
-        relatorio: relatorio,
-        modelo: modelo,
-        cliente: cliente,
-        status: status,
-      });
+  const [localStatus, setLocalStatus] = React.useState("");
 
-      console.log("Dados enviados com sucesso:", result);
-    } catch (error) {
-      console.error("Erro ao buscar ou enviar dados:", error);
+  const handleSendRep = async () => {
+    const response = await axios.get(`https://burnock-server.onrender.com/reps/${result}`);
+    console.log("Resposta da busca:");
+    
+      // Não existe → cria novo
+      console.log("Número de série não encontrado, enviando dados...");
+      try {
+        const sendResponse = await axios.post("https://burnock-server.onrender.com/sendrep", {
+          numero_serie: result,
+          data_entrada: new Date().toISOString(),
+          data_saida: null,
+          relatorio: relatorio,
+          modelo: modelo,
+          cliente: cliente,
+          status: "Recebido",
+        });
+        console.log("Inserção feita com sucesso:", sendResponse.data);
+      } catch (err) {
+        console.error("Erro ao inserir novo registro:", err);
+      
     }
+
   };
 
   return (
