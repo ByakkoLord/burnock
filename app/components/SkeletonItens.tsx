@@ -9,6 +9,7 @@ export default function SkeletonItens({ showSkeleton }: SkeletonItensProps) {
   const pulseAnim = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
+    console.log(showSkeleton + " showSkeleton");
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -36,7 +37,7 @@ export default function SkeletonItens({ showSkeleton }: SkeletonItensProps) {
             justifyContent: "center",
             marginTop: 80,
             gap: 16,
-            opacity: pulseAnim, // Aqui a mágica acontece
+            opacity: pulseAnim,
           }}
         >
           {[1, 2, 3, 4].map((_, i) => (

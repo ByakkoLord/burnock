@@ -95,14 +95,6 @@ android {
         versionCode 1
         versionName "1.0.0"
     }
-    
-    flavorDimensions "react-native-camera"
-
-    productFlavors {
-        general {
-            dimension "react-native-camera"
-        }
-    }
 
     signingConfigs {
         debug {

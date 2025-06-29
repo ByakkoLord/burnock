@@ -27,7 +27,6 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
-
 SplashScreen.preventAutoHideAsync();
 
 type Rep = {
@@ -35,6 +34,7 @@ type Rep = {
   modelo: string;
   cliente: string;
   status: string;
+  data_entrada: string;
 };
 
 export default function Index() {
@@ -46,32 +46,92 @@ export default function Index() {
   const [backButtonVisible, setBackButtonVisible] = useState(true);
   const [qrResult, setQrResult] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
-  const position = useRef(new Animated.ValueXY({ x: 0, y: 500 })).current;
+  const position = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const position1 = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const position2 = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const loading = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const [showSkeleton, setShowSkeleton] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [loadingVisible, setLoadingVisible] = useState(false);
 
   const [fontsLoaded] = useFonts({
-      Poppins_400Regular,
-      Poppins_700Bold,
-      Poppins_500Medium,
-    });
+    Poppins_400Regular,
+    Poppins_700Bold,
+    Poppins_500Medium,
+  });
+
+  let countAnimation = 0;
+
+  const handleLoadingAnimation = () => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(loading, {
+          toValue: { x: 1000, y: 0 },
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(loading, {
+          toValue: { x: 0, y: 0 },
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  };
+
+  const handleButtonAnimation = () => {
+    if (countAnimation == 0) {
+      Animated.timing(position, {
+        toValue: { x: -100, y: 0 },
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+      Animated.timing(position1, {
+        toValue: { x: -80, y: -80 },
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+      Animated.timing(position2, {
+        toValue: { x: 0, y: -100 },
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+      countAnimation++;
+    } else {
+      Animated.timing(position, {
+        toValue: { x: 0, y: 0 },
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+      Animated.timing(position1, {
+        toValue: { x: 0, y: 0 },
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+      Animated.timing(position2, {
+        toValue: { x: 0, y: 0 },
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+      countAnimation = 0;
+    }
+  };
 
   useEffect(() => {
+    console.log(showSkeleton + " showSkeletonIndex");
     if (formsVisible) {
       setBackButtonVisible(true);
     } else {
       setBackButtonVisible(false);
     }
 
-    Animated.timing(position, {
-      toValue: { x: 0, y: 0 },
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
-
     axios
       .get("https://burnock-server.onrender.com/reps")
       .then((response: AxiosResponse) => {
         setRepArray(response.data);
+        console.log("Dados recebidos:", response.data);
+        setShowSkeleton(false);
+        setLoadingVisible(false);
       })
       .catch((error: Error) => {
         console.error("Erro ao buscar dados:", error);
@@ -81,18 +141,32 @@ export default function Index() {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       await SplashScreen.hideAsync();
     };
-    setShowSkeleton(false);
     prepareApp();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleBarCodeScanned = (result: BarcodeScanningResult) => {
     if (!scanned) {
       setScanned(true);
       console.log("QR Code escaneado:", result.data);
       setModalVisible(false);
-      setFormsVisible(true);
       setQrResult(result.data);
-      // Aqui você pode usar o `result.data` para buscar mais informações ou fazer algo com o QR Code.
+      (async () => {
+        try {
+          const response = await axios.get(
+            `https://burnock-server.onrender.com/reps/${result.data}`
+          );
+
+          if (response.data && response.data.numero_serie) {
+            console.log(
+              "Número de série já existe:",
+              response.data.numero_serie
+            );
+            return;
+          }
+        } finally {
+          setFormsVisible(true);
+        }
+      })();
     }
   };
 
@@ -111,6 +185,7 @@ export default function Index() {
       numero_serie: rep.numero_serie,
       modelo: rep.modelo,
       cliente: rep.cliente,
+      data_entrada: rep.data_entrada,
       status: rep.status,
     }));
 
@@ -147,10 +222,25 @@ export default function Index() {
             backgroundColor: "#fff",
             paddingLeft: 50,
             borderRadius: 14,
-            fontFamily: "Poppins_400Regular"
+            fontFamily: "Poppins_400Regular",
           }}
         />
       </View>
+      {loadingVisible && (
+        <Animated.View
+          style={{
+            alignItems: "center",
+            display: "flex",
+            flexDirection: "row",
+            transform: loading.getTranslateTransform(),
+            left: -500,
+          }}
+        >
+          <View style={{ height: 2, width: 1000, backgroundColor: "gray" }} />
+          <View style={{ height: 2, width: 1000, backgroundColor: "white" }} />
+        </Animated.View>
+      )}
+
       <SkeletonItens showSkeleton={showSkeleton} />
       {formsVisible && (
         <TouchableOpacity
@@ -188,18 +278,47 @@ export default function Index() {
             numero_series={rep.numero_serie}
             modelo={rep.modelo}
             cliente={rep.cliente}
+            data_entrada={rep.data_entrada}
             status={rep.status}
           />
         ))}
       </ScrollView>
 
-      <TouchableOpacity style={[styles.fab, {}]}></TouchableOpacity>
-      <TouchableOpacity style={[styles.fab, {}]}></TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => {
+          handleButtonAnimation();
+        }}
+        style={[styles.fab, { zIndex: 999 }]}
+      >
+        <Image
+          source={require("../assets/images/menu.png")}
+          style={{ width: 40, height: 40 }}
+        />
+      </TouchableOpacity>
       <TouchableOpacity
         style={[styles.fab, { transform: position.getTranslateTransform() }]}
-      ></TouchableOpacity>
+      >
+        <Image
+          source={require("../assets/images/barcode.png")}
+          style={{ width: 40, height: 40 }}
+        />
+      </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.fab, {}]}
+        onPress={() => {
+          setRefreshTrigger((prev) => prev + 1);
+          setLoadingVisible(true);
+          handleLoadingAnimation();
+        }}
+        style={[styles.fab, { transform: position2.getTranslateTransform() }]}
+      >
+        <Image
+          source={require("../assets/images/reload.png")}
+          style={{ width: 40, height: 40 }}
+        />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.fab, { transform: position1.getTranslateTransform() }]}
         onPress={() => {
           setScanned(false);
           setModalVisible(true);
@@ -258,6 +377,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 30,
     alignItems: "center",
+    backgroundColor: "#BEBEBE",
     gap: 15,
   },
   scrollArea: {
@@ -274,11 +394,12 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: "absolute",
+    borderWidth: 1,
     right: 20,
     bottom: 30,
     width: 70,
     height: 70,
-    backgroundColor: "#B8B8B8",
+    backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 35,

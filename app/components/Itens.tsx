@@ -5,19 +5,20 @@ import {
   Poppins_700Bold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ItensProps {
   numero_series: string;
   modelo: string;
   cliente: string;
+  data_entrada?: string;
   status: string;
 }
 
 // Mapeamento das imagens por prefixo
 const imageMap: { [prefixo: string]: any } = {
-  '00014': require("../../assets/images/itens/idclass671.jpg"),
-  '00004': require("../../assets/images/itens/henryPrisma.jpg"),
+  "00014": require("../../assets/images/itens/idclass671.jpg"),
+  "00004": require("../../assets/images/itens/henryPrisma.jpg"),
   // Adicione mais prefixos conforme necessário
 };
 
@@ -27,17 +28,29 @@ function getImageBySerie(numero_series: string) {
   return imageMap[prefix] || require("../../assets/images/search.png");
 }
 
-export default function Itens({ numero_series, modelo, cliente, status }: ItensProps) {
+export default function Itens({
+  numero_series,
+  modelo,
+  cliente,
+  status,
+  data_entrada,
+}: ItensProps) {
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_700Bold,
     Poppins_500Medium,
   });
 
+  useEffect(() => {
+    if (data_entrada) {
+      console.log("Data de entrada:", data_entrada);
+      console.log("Status atualizado para:", status);
+    }
+  }, []);
+
   if (!fontsLoaded) {
     return null;
   }
-
   return (
     <View
       style={{
@@ -45,7 +58,7 @@ export default function Itens({ numero_series, modelo, cliente, status }: ItensP
         alignItems: "center",
         width: "80%",
         height: 119,
-        backgroundColor: "#D8D8D8",
+        backgroundColor: "white",
         borderRadius: 14,
       }}
     >
@@ -79,7 +92,7 @@ export default function Itens({ numero_series, modelo, cliente, status }: ItensP
             Cliente: {cliente}
           </Text>
           <Text style={{ color: "#CD8686", fontFamily: "Poppins_700Bold" }}>
-            {status}
+          {status}
           </Text>
         </View>
       </View>

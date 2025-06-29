@@ -1,5 +1,10 @@
 import { Stack } from "expo-router";
+import { ItensProvider } from "./contexts/itensContext";
 
 export default function RootLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <ItensProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </ItensProvider>
+  );
 }

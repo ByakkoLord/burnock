@@ -27,23 +27,26 @@ export default function Forms({ formVisible, result }: FormsProps) {
     Poppins_500Medium,
   });
 
+  const [cliente, setCliente] = React.useState("");
+  const [relatorio, setRelatorio] = React.useState("");
+  const [modelo, setModelo] = React.useState("");
+  const [status, setStatus] = React.useState("Retirado");
   const handleSendRep = async () => {
-    axios
-      .post("https://burnock-server.onrender.com/sendrep", {
+    try {
+      await axios.post("https://burnock-server.onrender.com/sendrep", {
         numero_serie: result,
         data_entrada: new Date().toISOString(),
-        data_saida: null, // Aqui você pode substituir por um valor real
-        relatorio: "https://example.com/relatorio", // Aqui você pode substituir por um valor real
-        modelo: "Modelo Exemplo", // Aqui você pode substituir por um valor real
-        cliente: "", // Aqui você pode substituir por um valor real
-        status: "", // Aqui você pode substituir por um valor real
-      })
-      .catch((error: Error) => {
-        console.error("Erro ao enviar dados:", error);
-      })
-      .then(() => {
-        console.log("Dados enviados com sucesso:", result);
+        data_saida: null,
+        relatorio: relatorio,
+        modelo: modelo,
+        cliente: cliente,
+        status: status,
       });
+
+      console.log("Dados enviados com sucesso:", result);
+    } catch (error) {
+      console.error("Erro ao buscar ou enviar dados:", error);
+    }
   };
 
   return (
@@ -89,7 +92,11 @@ export default function Forms({ formVisible, result }: FormsProps) {
           >
             Modelo
           </Text>
-          <TextInput style={styles.input} placeholder="Digite o Modelo" />
+          <TextInput
+            style={styles.input}
+            placeholder="Digite o Modelo"
+            onChangeText={setModelo}
+          />
           <Text
             style={{
               fontFamily: "Poppins_700Bold",
@@ -101,7 +108,11 @@ export default function Forms({ formVisible, result }: FormsProps) {
           >
             Cliente
           </Text>
-          <TextInput style={styles.input} placeholder="Digite o Cliente" />
+          <TextInput
+            style={styles.input}
+            placeholder="Digite o Cliente"
+            onChangeText={setCliente}
+          />
           <Text
             style={{
               fontFamily: "Poppins_700Bold",
@@ -114,6 +125,7 @@ export default function Forms({ formVisible, result }: FormsProps) {
             Relatório
           </Text>
           <TextInput
+            onChangeText={setRelatorio}
             multiline={true}
             numberOfLines={6}
             style={[styles.input, { height: 200, textAlignVertical: "top" }]}
