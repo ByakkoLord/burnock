@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   Text,
+  TextInput,
   View,
   Modal,
   TouchableOpacity,
@@ -18,6 +19,14 @@ import axios, { AxiosResponse } from "axios";
 import { ScrollView } from "react-native";
 import Itens from "./components/Itens";
 import Forms from "./components/forms";
+import SkeletonItens from "./components/SkeletonItens";
+import {
+  useFonts,
+  Poppins_400Regular,
+  Poppins_700Bold,
+  Poppins_500Medium,
+} from "@expo-google-fonts/poppins";
+
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,7 +45,15 @@ export default function Index() {
   const [formsVisible, setFormsVisible] = useState(false);
   const [backButtonVisible, setBackButtonVisible] = useState(true);
   const [qrResult, setQrResult] = useState<string>("");
-    const position = useRef(new Animated.ValueXY({ x: 0, y: 500 })).current;
+  const [searchQuery, setSearchQuery] = useState("");
+  const position = useRef(new Animated.ValueXY({ x: 0, y: 500 })).current;
+  const [showSkeleton, setShowSkeleton] = useState(true);
+
+  const [fontsLoaded] = useFonts({
+      Poppins_400Regular,
+      Poppins_700Bold,
+      Poppins_500Medium,
+    });
 
   useEffect(() => {
     if (formsVisible) {
@@ -64,7 +81,7 @@ export default function Index() {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       await SplashScreen.hideAsync();
     };
-
+    setShowSkeleton(false);
     prepareApp();
   }, []);
 
@@ -79,16 +96,62 @@ export default function Index() {
     }
   };
 
-  const reps = repArray.map((rep, index) => ({
-    id: index + 1,
-    numero_serie: rep.numero_serie,
-    modelo: rep.modelo,
-    cliente: rep.cliente,
-    status: rep.status,
-  }));
+  const reps = repArray
+    .filter((rep) => {
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        rep.numero_serie.toLowerCase().includes(searchLower) ||
+        rep.modelo.toLowerCase().includes(searchLower) ||
+        rep.cliente.toLowerCase().includes(searchLower) ||
+        rep.status.toLowerCase().includes(searchLower)
+      );
+    })
+    .map((rep, index) => ({
+      id: index + 1,
+      numero_serie: rep.numero_serie,
+      modelo: rep.modelo,
+      cliente: rep.cliente,
+      status: rep.status,
+    }));
 
   return (
     <View style={styles.container}>
+      <View
+        style={{
+          width: "80%",
+          alignItems: "center",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "center",
+        }}
+      >
+        <Image
+          source={require("../assets/images/search.png")}
+          style={{
+            width: 20,
+            height: 20,
+            position: "absolute",
+            top: 52,
+            left: 15,
+            zIndex: 999,
+          }}
+        />
+        <TextInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Digite o SN, Modelo, Cliente ou Fornecedor"
+          style={{
+            width: "100%",
+            height: 45,
+            marginTop: 40,
+            backgroundColor: "#fff",
+            paddingLeft: 50,
+            borderRadius: 14,
+            fontFamily: "Poppins_400Regular"
+          }}
+        />
+      </View>
+      <SkeletonItens showSkeleton={showSkeleton} />
       {formsVisible && (
         <TouchableOpacity
           onPress={() => {
@@ -110,8 +173,9 @@ export default function Index() {
       )}
 
       <Forms formVisible={formsVisible} result={qrResult} />
+
       <ScrollView
-        style={{ flex: 1, width: "100%", marginTop: 50 }}
+        style={{ flex: 1, width: "100%", marginTop: 10 }}
         contentContainerStyle={{
           alignItems: "center",
           gap: 15,
@@ -131,7 +195,9 @@ export default function Index() {
 
       <TouchableOpacity style={[styles.fab, {}]}></TouchableOpacity>
       <TouchableOpacity style={[styles.fab, {}]}></TouchableOpacity>
-      <TouchableOpacity style={[styles.fab, {transform: position.getTranslateTransform()}]}></TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.fab, { transform: position.getTranslateTransform() }]}
+      ></TouchableOpacity>
       <TouchableOpacity
         style={[styles.fab, {}]}
         onPress={() => {
