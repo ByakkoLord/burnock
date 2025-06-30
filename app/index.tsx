@@ -20,6 +20,7 @@ import { ScrollView } from "react-native";
 import Itens from "./components/Itens";
 import Forms from "./components/forms";
 import SkeletonItens from "./components/SkeletonItens";
+import Status from "./components/Status";
 import {
   useFonts,
   Poppins_400Regular,
@@ -35,6 +36,7 @@ type Rep = {
   cliente: string;
   status: string;
   data_entrada: string;
+  relatorio: string;
 };
 
 export default function Index() {
@@ -53,6 +55,7 @@ export default function Index() {
   const [showSkeleton, setShowSkeleton] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [loadingVisible, setLoadingVisible] = useState(false);
+  const [statusScreen, setStatusScreen] = useState(false);
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -186,7 +189,8 @@ export default function Index() {
         rep.numero_serie.toLowerCase().includes(searchLower) ||
         rep.modelo.toLowerCase().includes(searchLower) ||
         rep.cliente.toLowerCase().includes(searchLower) ||
-        rep.status.toLowerCase().includes(searchLower)
+        rep.status.toLowerCase().includes(searchLower) ||
+        rep.relatorio.toLowerCase().includes(searchLower)
       );
     })
     .map((rep, index) => ({
@@ -196,10 +200,12 @@ export default function Index() {
       cliente: rep.cliente,
       data_entrada: rep.data_entrada,
       status: rep.status,
+      relatorio: rep.relatorio
     }));
 
   return (
     <View style={styles.container}>
+      {statusScreen && <Status />}
       <View
         style={{
           width: "80%",
@@ -289,6 +295,7 @@ export default function Index() {
             cliente={rep.cliente}
             data_entrada={rep.data_entrada}
             status={rep.status}
+            relatorio={rep.relatorio}
           />
         ))}
       </ScrollView>

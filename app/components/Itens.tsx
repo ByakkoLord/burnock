@@ -1,11 +1,11 @@
-import { View, Image, Text } from "react-native";
+import { View, Image, Text, Animated, TouchableOpacity } from "react-native";
 import {
   useFonts,
   Poppins_400Regular,
   Poppins_700Bold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface ItensProps {
   numero_series: string;
@@ -13,6 +13,7 @@ interface ItensProps {
   cliente: string;
   data_entrada?: string;
   status: string;
+  relatorio?: string;
 }
 
 // Mapeamento das imagens por prefixo
@@ -34,6 +35,7 @@ export default function Itens({
   cliente,
   status,
   data_entrada,
+  relatorio
 }: ItensProps) {
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -41,16 +43,37 @@ export default function Itens({
     Poppins_500Medium,
   });
 
+  const [expanded, setExpanded] = useState(false); 
+  const sizeAnim = useRef(new Animated.Value(120)).current; 
+  const expandBox = () => {
+    Animated.timing(sizeAnim, {
+      toValue: 300,
+      duration: 500,
+      useNativeDriver: false,
+    }).start();
+    setExpanded(true);
+  };
+
+  const shrinkBox = () => {
+    Animated.timing(sizeAnim, {
+      toValue: 120,
+      duration: 500,
+      useNativeDriver: false,
+    }).start();
+    setExpanded(false);
+  };
+
   if (!fontsLoaded) {
     return null;
   }
   return (
-    <View
+    <Animated.View
       style={{
-        justifyContent: "center",
+        justifyContent: "flex-start",
         alignItems: "center",
+        paddingTop: 8,
         width: "80%",
-        height: 119,
+        height: sizeAnim,
         backgroundColor: "#F0F0F0",
         borderRadius: 14,
       }}
@@ -74,7 +97,7 @@ export default function Itens({
             backgroundColor: "#ACACAC",
           }}
         />
-        <View>
+        <View style={{ flex: 1, paddingVertical: 10 }}>
           <Text style={{ color: "#5E5E5E", fontFamily: "Poppins_500Medium" }}>
             SN: {numero_series}
           </Text>
@@ -87,8 +110,27 @@ export default function Itens({
           <Text style={{ color: "#CD8686", fontFamily: "Poppins_700Bold" }}>
           {status}
           </Text>
+          
         </View>
+        
+        <TouchableOpacity style={{ paddingRight: 38, paddingTop: 80 }} onPress={() => (expanded ? shrinkBox() : expandBox())}>
+          <Image style={{ width: 18, height: 18, alignSelf: "flex-end", transform: [{ rotate: expanded ? "180deg" : "0deg" }] }} source={require("../../assets/images/arrow-down.png")} />
+        </TouchableOpacity>
+        
       </View>
-    </View>
+      {expanded && (
+        <>
+            <Text style={{ color: "#5E5E5E", fontFamily: "Poppins_400Regular" }}>
+              Data de Entrada: {data_entrada || "N/A"}
+            </Text>
+            <Text>
+              Relatório
+            </Text>
+            <Text>
+              {relatorio}
+            </Text>
+          </>)}
+          
+    </Animated.View>
   );
 }
