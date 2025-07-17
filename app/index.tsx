@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import * as ImagePicker from "expo-image-picker";
 import {
   Text,
   TextInput,
@@ -56,12 +57,67 @@ export default function Index() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [loadingVisible, setLoadingVisible] = useState(false);
   const [statusScreen, setStatusScreen] = useState(false);
+  const [nfeScreen, setNfeScreen] = useState(false);
+  const [nfeInput, setNfeInput] = useState("");
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_700Bold,
     Poppins_500Medium,
   });
+
+  const [image, setImage] = useState<string | null>(null);
+
+  const pickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permission.status !== "granted") {
+      alert("Permissão negada para acessar a galeria!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      const selectedAsset = result.assets[0];
+      setImage(selectedAsset.uri);
+    }
+  };
+
+  const uploadImage = async () => {
+    setNfeScreen(false);
+    if (!image) return;
+
+    const formData = new FormData();
+    formData.append("nfe", {
+      uri: image,
+      name: `nfe_${Date.now()}.jpg`,
+      type: "image/jpeg",
+    } as any);
+
+    formData.append("serial_number", nfeInput);
+
+    try {
+      const response = await axios.post(
+        "http://192.168.0.239:3000/upload-nfe",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("Imagem enviada com sucesso!", response.data);
+      alert("Upload concluído!");
+    } catch (error) {
+      console.error("Erro ao enviar imagem:", error);
+      alert("Erro ao enviar");
+    }
+  };
 
   let countAnimation = 0;
 
@@ -200,12 +256,18 @@ export default function Index() {
       cliente: rep.cliente,
       data_entrada: rep.data_entrada,
       status: rep.status,
-      relatorio: rep.relatorio
+      relatorio: rep.relatorio,
     }));
 
   return (
     <View style={styles.container}>
       {statusScreen && <Status />}
+      {nfeScreen && <View style={{ width: "70%", alignItems: "center", gap: 10, position: "absolute", top: 450, backgroundColor: "#fff", padding: 20, borderRadius: 10, zIndex: 999 }}>
+        <TextInput value={nfeInput} onChangeText={(text) => {setNfeInput(text); console.log(text)}} placeholder="Digite o Número de Série" />
+        <TouchableOpacity style={{ backgroundColor: "blue", padding: 10, borderRadius: 5 }} onPress={() => {console.log("NFE enviado:", nfeInput); setNfeInput(""); uploadImage()}}>
+          <Text style={{ color: "white" }}>Enviar</Text>
+        </TouchableOpacity>
+      </View>}
       <View
         style={{
           width: "80%",
@@ -312,6 +374,12 @@ export default function Index() {
         />
       </TouchableOpacity>
       <TouchableOpacity
+        onPress={() => {
+          pickImage();
+          setTimeout(() => {
+            setNfeScreen(true);
+          }, 1000);
+        }}
         style={[styles.fab, { transform: position.getTranslateTransform() }]}
       >
         <Image
