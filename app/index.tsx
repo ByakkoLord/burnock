@@ -102,7 +102,7 @@ export default function Index() {
 
     try {
       const response = await axios.post(
-        "http://192.168.0.251:3000/upload-nfe",
+        "http://192.168.0.239:3000/upload-nfe",
         formData,
         {
           headers: {
